@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Android Camera View</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    video {
+      width: 90%;
+      max-width: 600px;
+      border: 2px solid #333;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>📷 Android Camera</h1>
+  <video id="video" autoplay playsinline></video>
+  <canvas id="canvas" style="display: none;"></canvas>
+
+  <!-- Socket.IO -->
+  <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
+  <script>
+    // Connect to server via Socket.IO (update ngrok URL here!)
+    const socket = io("https://b89d-2402-3a80-4263-b320-61dc-b263-15f-2816.ngrok-free.app"); // 👈 Replace this with your actual ngrok URL
+
+    const video = document.getElementById("video");
+    const canvas = document.getElementById("canvas");
+    const context = canvas.getContext("2d");
+
+    // Start video stream
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => {
+        video.srcObject = stream;
+      })
+      .catch(error => {
+        console.error("Camera access denied:", error);
+        alert("Cannot access camera. Please allow permission.");
+      });
+
+    // Listen for signal from laptop to take picture
+    socket.on("take_picture", () => {
+      if (!video.videoWidth || !video.videoHeight) return;
+
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      context.drawImage(video, 0, 0);
+
+      const imageData = canvas.toDataURL("image/png");
+
+      // Send image to backend
+      fetch("https://b89d-2402-3a80-4263-b320-61dc-b263-15f-2816.ngrok-free.app/upload", {  // 👈 Also update here
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ image: imageData })
+      })
+      .then(response => response.json())
+      .then(data => {
+        console.log("Image uploaded:", data);
+      })
+      .catch(error => {
+        console.error("Upload failed:", error);
+      });
+    });
+  </script>
+</body>
+</html>

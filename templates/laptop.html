@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Laptop Control</title>
+</head>
+<body>
+  <h1>Laptop View</h1>
+  <button onclick="triggerCapture()">Take Picture from Android</button>
+
+  <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
+  <script>
+    const socket = io("https://b89d-2402-3a80-4263-b320-61dc-b263-15f-2816.ngrok-free.app"); // replace with your ngrok URL
+
+    function triggerCapture() {
+      socket.emit("trigger_capture");
+    }
+
+    socket.on("image_saved", (data) => {
+      alert("Image saved as: " + data.filename);
+    });
+  </script>
+</body>
+</html>
